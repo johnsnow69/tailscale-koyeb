@@ -7,7 +7,7 @@ COPY . ./
 FROM alpine:latest as tailscale
 WORKDIR /app
 COPY . ./
-ENV TSFILE=tailscale_1.16.2_amd64.tgz
+ENV TSFILE=tailscale_1.24.2_amd64.tgz
 RUN wget https://pkgs.tailscale.com/stable/${TSFILE} && \
   tar xzf ${TSFILE} --strip-components=1
 COPY . ./
@@ -21,6 +21,10 @@ COPY --from=builder /app/start.sh /app/start.sh
 COPY --from=builder /app/my-app /app/my-app
 COPY --from=tailscale /app/tailscaled /app/tailscaled
 COPY --from=tailscale /app/tailscale /app/tailscale
+
+RUN echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.conf
+RUN echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.conf
+RUN sudo sysctl -p /etc/sysctl.conf
 
 RUN mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale
 
